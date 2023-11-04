@@ -25,7 +25,7 @@ public class DevisPDFGenerator {
             contentStream.newLineAtOffset(0, -20);
             contentStream.showText("Description : " + description);
             contentStream.newLineAtOffset(0, -20);
-            contentStream.showText("Coût : " + cost);
+            contentStream.showText("Coût : " + cost + " EUR");
             contentStream.endText();
             contentStream.close();
 
