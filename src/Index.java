@@ -115,7 +115,7 @@ public class Index {
 
         editPDFButton.addActionListener(e -> {
             String pdfFileName = String.format("devis_%s_%d.pdf", client, System.currentTimeMillis());
-            DevisPDFGenerator.generatePDF(client, "Garage XYZ", "123 Main St, City", description, Double.parseDouble(cost), pdfFileName, pdfFileName + ".pdf");
+            DevisPDFGenerator.generatePDF(client, "Garage OSS'CARS", "123 Main St, City", description, Double.parseDouble(cost), pdfFileName, pdfFileName + ".pdf");
             JOptionPane.showMessageDialog(null, "Fichier PDF créé : " + pdfFileName);
         });
 

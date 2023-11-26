@@ -39,56 +39,95 @@ public class DevisPDFGenerator {
         }
     }
 
-    private static void addBody(PDDocument document, PDPage page, String client, String garageName, String garageAddress, String description, double cost, String partReference) throws IOException {
+    private static void addBody(PDDocument document, PDPage page, String immat, String garageName, String garageAddress, String description, double cost, String partReference) throws IOException {
         try (PDPageContentStream bodyStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
             try (PDPageContentStream bodyGarage = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 float bodyY = page.getMediaBox().getHeight() - 100;
-                bodyStream.setFont(new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN), 12);
+                bodyStream.setFont(new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN), 14);
                 bodyGarage.setFont(new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN), 8);
 
                 // Coordonnées du garage
-                addText(bodyGarage, 20, bodyY, "N° du document : " + partReference);
-                addText(bodyGarage, 20, bodyY - 20, "Date : " + LocalDate.now());
-                addText(bodyGarage, 20, bodyY - 40, garageName);
-                addText(bodyGarage, 20, bodyY - 60, "Adresse : " + garageAddress);
-                addText(bodyGarage, 20, bodyY - 80, "Tél : " + client);
-                addText(bodyGarage, 20, bodyY - 100, "E-mail : " + garageAddress);
-                addText(bodyGarage, 20, bodyY - 120, "SIRET : " + garageAddress);
-                addText(bodyGarage, 20, bodyY - 140, "Ouvert du lundi au vendredi de 08h00 à 19h00 et le samedi de 08h00 à 17h00.");
-
-
+                addGarageDetails(bodyGarage, bodyY, partReference, garageName);
 
                 // Coordonnées du client
-                float clientY = bodyY - 80; // Assurez-vous que le texte du client est en dessous des données du garage
-                addText(bodyStream, 350, clientY, "Immatriculation : " + client);
-                addText(bodyStream, 350, clientY - 20, "Adresse : " + garageAddress);
+                float clientY = bodyY - 40;
+                addClientDetails(bodyGarage, clientY, immat);
+
+                // Écrire du texte au-dessus du tableau
+                addText(bodyStream, 20, clientY - 80, "Voici les détails de votre facture");
+
+                float tableY = clientY - 110;
+                float tableWidth = page.getMediaBox().getWidth() - 40;
+
+                // Dessiner la première ligne verticale
+                drawVerticalLine(bodyStream, tableY, 300, -80);
+                drawVerticalLine(bodyStream, tableY, 20, -80);
+                drawVerticalLine(bodyStream, tableY, 576, -80);
 
                 // Tableau pour la description et le coût
-                float tableY = clientY - 100;
-                float tableWidth = page.getMediaBox().getWidth() - 40; // largeur de droite a gauche du tableau
-                float tableHeight = 40; // Increase the table height to accommodate two rows
+                bodyStream.addRect(20, tableY, tableWidth, -80);
 
-                bodyStream.setLineWidth(1f);
-                bodyStream.addRect(20, tableY, tableWidth, tableHeight);
-                bodyStream.stroke();
+                float tableHeight = 20;
 
-                addText(bodyStream, 25, tableY + tableHeight - 15, "Description:");
-                addText(bodyStream, 303, tableY + tableHeight - 15, description);
+                // Première ligne du tableau
+                addTableRow(bodyStream, 25, tableY + tableHeight - 20, "Description", 303, "Prix TTC:");
 
-                addText(bodyStream, 25, tableY + tableHeight - 35, "Prix:");
-                addText(bodyStream, 303, tableY + tableHeight - 35, String.valueOf(cost));
+                // Dessiner la ligne horizontale au-dessus de "Prix 1:"
+                drawHorizontalLine(bodyStream, tableY + tableHeight, 20, tableWidth + 20);
 
+                // Deuxième ligne du tableau
+                addTableRow(bodyStream, 25, tableY + tableHeight - 40, description, 303, cost + " €");
 
-                // Draw horizontal and vertical lines for the table
-                bodyStream.setLineWidth(1f);
-                bodyStream.moveTo(20, tableY + 20);
-                bodyStream.lineTo(20 + tableWidth, tableY + 20);
-                bodyStream.moveTo(20 + tableWidth / 2, tableY);
-                bodyStream.lineTo(20 + tableWidth / 2, tableY + tableHeight);
+                // Dessiner la ligne horizontale en dessous de "Prix 1:"
+                drawHorizontalLine(bodyStream, tableY + tableHeight - 20, 20, tableWidth + 20);
 
                 bodyStream.stroke();
             }
         }
+    }
+
+    private static void addGarageDetails(PDPageContentStream stream, float bodyY, String partReference, String garageName) throws IOException {
+        float offsetY = 0;
+        addText(stream, 20, bodyY + offsetY, "N° du document : " + partReference);
+        offsetY -= 10;
+        addText(stream, 20, bodyY + offsetY, "Date : " + LocalDate.now());
+        offsetY -= 10;
+        addText(stream, 20, bodyY + offsetY, garageName);
+        offsetY -= 10;
+        addText(stream, 20, bodyY + offsetY, "Adresse : Rue, Saint-Etienne");
+        offsetY -= 10;
+        addText(stream, 20, bodyY + offsetY, "Tél : 06 00 00 00 00");
+        offsetY -= 10;
+        addText(stream, 20, bodyY + offsetY, "E-mail : osscars@gmail.com");
+        offsetY -= 10;
+        addText(stream, 20, bodyY + offsetY, "SIRET : 123456789");
+        offsetY -= 10;
+        addText(stream, 20, bodyY + offsetY, "Ouvert du lundi au vendredi de 08h00 à 19h00 et le samedi de 08h00 à 17h00.");
+    }
+
+    private static void addClientDetails(PDPageContentStream stream, float clientY, String immat) throws IOException {
+        addText(stream, 350, clientY, "FACTURE");
+        addText(stream, 350, clientY - 10, "Immatriculation : " + immat);
+    }
+
+    private static void addTableRow(PDPageContentStream stream, float xDescription, float y, String description, float xPrice, String priceLabel) throws IOException {
+        float tableHeight = 20;
+        addText(stream, xDescription, y + tableHeight - 15, description);
+        addText(stream, xPrice, y + tableHeight - 15, priceLabel);
+    }
+
+    private static void drawVerticalLine(PDPageContentStream stream, float startY, float x, float height) throws IOException {
+        stream.setLineWidth(2f); // Changer 2f selon l'épaisseur souhaitée
+        stream.moveTo(x, startY + 20);
+        stream.lineTo(x, startY + height);
+        stream.stroke();
+    }
+
+    private static void drawHorizontalLine(PDPageContentStream stream, float y, float startX, float endX) throws IOException {
+        stream.setLineWidth(2f); // Changer 2f selon l'épaisseur souhaitée
+        stream.moveTo(startX, y);
+        stream.lineTo(endX, y);
+        stream.stroke();
     }
 
     private static void addText(PDPageContentStream stream, float x, float y, String text) throws IOException {
@@ -97,7 +136,6 @@ public class DevisPDFGenerator {
         stream.showText(text);
         stream.endText();
     }
-
 
     private static void addFooter(PDDocument document, PDPage page) throws IOException {
         try (PDPageContentStream footerStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
